@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Παραγγελίες Ξενοδοχείου</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <h1>Παραγγελίες</h1>
+            <div class="header-actions">
+                <button id="btn-reset" class="icon-btn" title="Καθαρισμός">
+                    <span class="material-symbols-rounded">delete</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Supplier Selector -->
+        <div class="supplier-container">
+            <span class="material-symbols-rounded supplier-icon">local_shipping</span>
+            <div class="supplier-select-wrapper">
+                <label for="supplier-select">Επιλογή Προμηθευτή</label>
+                <select id="supplier-select" class="supplier-select">
+                    <!-- Θα γεμίσει από JS -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Slicers (Category Filter) -->
+        <div class="slicer-container" id="category-slicer">
+            <!-- Κατηγορίες θα προστεθούν εδώ από JS -->
+        </div>
+
+        <!-- Product List -->
+        <main class="product-list" id="product-list">
+            <!-- Προϊόντα θα προστεθούν εδώ από JS -->
+        </main>
+
+        <!-- Floating Cart Button -->
+        <button id="btn-cart" class="floating-cart hidden">
+            <span class="material-symbols-rounded">shopping_cart</span>
+            <span class="cart-badge" id="cart-count">0</span>
+            <span class="cart-text">Ανασκόπηση</span>
+        </button>
+
+        <!-- Modal for Order Summary -->
+        <div id="cart-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Σύνοψη Παραγγελίας</h2>
+                    <button id="btn-close-modal" class="icon-btn">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="cart-items">
+                    <!-- Είδη καλαθιού εδώ -->
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-print-order" class="secondary-btn" title="Εκτύπωση">
+                        <span class="material-symbols-rounded">print</span>
+                    </button>
+                    <button id="btn-send-email" class="primary-btn">
+                        <span class="material-symbols-rounded">send</span>
+                        Αποστολή με Email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Φόρτωση των δεδομένων (Από το Excel) -->
+    <script src="data.js"></script>
+    <!-- Φόρτωση της λογικής της εφαρμογής -->
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
