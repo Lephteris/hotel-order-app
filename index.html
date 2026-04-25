@@ -18,7 +18,10 @@
     <div id="app">
         <!-- Header -->
         <header>
-            <h1>Παραγγελίες</h1>
+            <div class="header-title">
+                <img src="VC_newLogo_colour_Transparent.png" alt="Logo" class="header-logo">
+                <h1>Παραγγελίες</h1>
+            </div>
             <div class="header-actions">
                 <button id="btn-reset" class="icon-btn" title="Καθαρισμός">
                     <span class="material-symbols-rounded">delete</span>
@@ -35,6 +38,12 @@
                     <!-- Θα γεμίσει από JS -->
                 </select>
             </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <span class="material-symbols-rounded search-icon">search</span>
+            <input type="text" id="search-input" class="search-input" placeholder="Αναζήτηση προϊόντος...">
         </div>
 
         <!-- Slicers (Category Filter) -->

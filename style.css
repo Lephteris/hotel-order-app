@@ -43,6 +43,18 @@ header {
     box-shadow: var(--shadow-sm);
 }
 
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-logo {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+}
+
 header h1 {
     font-size: 1.25rem;
     font-weight: 700;
@@ -118,6 +130,41 @@ header h1 {
 
 .supplier-select:focus {
     border-color: var(--primary);
+}
+
+}
+
+/* Search Bar */
+.search-container {
+    background: var(--surface);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-icon {
+    color: var(--text-muted);
+    font-size: 24px;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: var(--bg-color);
+    padding: 10px 16px;
+    border-radius: var(--radius-full);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    outline: none;
+    transition: box-shadow 0.2s;
+}
+
+.search-input:focus {
+    box-shadow: 0 0 0 2px var(--primary);
+    background: var(--surface);
 }
 
 /* Slicers */

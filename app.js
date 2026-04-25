@@ -14,12 +14,15 @@ const suppliers = [...new Set(products.map(p => p.supplier))];
 // State (Κατάσταση Εφαρμογής)
 let activeSupplier = suppliers.length > 0 ? suppliers[0] : ""; // Προεπιλογή ο 1ος προμηθευτής
 let activeCategory = "Όλα";
+let searchQuery = "";
 let orderQuantities = {}; // Μορφή: { 1: 2, 5: 1 } (id: quantity)
 let orderNotes = {};      // Μορφή: { 1: "Παγωμένα", 5: "Χωρίς ζάχαρη" }
+
 
 // Οπτικά Στοιχεία (DOM Elements)
 const supplierSelect = document.getElementById("supplier-select");
 const categorySlicer = document.getElementById("category-slicer");
+const searchInput = document.getElementById("search-input");
 const productList = document.getElementById("product-list");
 const btnCart = document.getElementById("btn-cart");
 const cartCount = document.getElementById("cart-count");
@@ -55,6 +58,12 @@ function init() {
     btnSendEmail.addEventListener("click", sendEmail);
     btnReset.addEventListener("click", resetOrder);
     btnPrintOrder.addEventListener("click", () => window.print());
+    
+    // Αναζήτηση
+    searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        renderProducts();
+    });
     
     // Κλείσιμο modal αν κάνεις κλικ έξω από αυτό
     cartModal.addEventListener("click", (e) => {
@@ -105,6 +114,12 @@ function renderProducts() {
     // Φιλτράρισμα ανά Κατηγορία (αν δεν είναι "Όλα")
     if (activeCategory !== "Όλα") {
         filteredProducts = filteredProducts.filter(p => p.category === activeCategory);
+    }
+    
+    // Φιλτράρισμα ανά Αναζήτηση
+    if (searchQuery.trim() !== "") {
+        const query = searchQuery.toLowerCase().trim();
+        filteredProducts = filteredProducts.filter(p => p.name.toLowerCase().includes(query));
     }
         
     filteredProducts.forEach(product => {
