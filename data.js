@@ -1,5 +1,5 @@
 ﻿const products = [
-    { id: "1", name: "sdtgawgaergtawegaergarv (ΚΙΛ)", category: "ΛΟΙΠΑ ΤΡΟΦΙΜΑ", supplier: "ΜΠΟΣΚΟΣ", supplierEmail: "" },
+    { id: "1", name: "Αυτό είναι η αλλαγή στο Github (ΚΙΛ)", category: "ΛΟΙΠΑ ΤΡΟΦΙΜΑ", supplier: "ΜΠΟΣΚΟΣ", supplierEmail: "" },
     { id: "2", name: "Λουκανικα Χωριατικα (ΚΙΛ)", category: "ΛΟΙΠΑ ΤΡΟΦΙΜΑ", supplier: "ΜΠΟΣΚΟΣ", supplierEmail: "" },
     { id: "3", name: "Νουμπουλο Καπνιστο Χοιρινο (ΚΙΛ)", category: "ΛΟΙΠΑ ΤΡΟΦΙΜΑ", supplier: "ΜΠΟΣΚΟΣ", supplierEmail: "" },
     { id: "4", name: "Σαλαμι Chorizo (ΚΙΛ)", category: "ΛΟΙΠΑ ΤΡΟΦΙΜΑ", supplier: "ΜΠΟΣΚΟΣ", supplierEmail: "" },
