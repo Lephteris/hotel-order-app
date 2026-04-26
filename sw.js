@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hotel-orders-v2';
+const CACHE_NAME = 'vathicove-orders-v4';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const urlsToCache = [
 
 // Εγκατάσταση του Service Worker
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Αμέσως ενεργοποίηση χωρίς αναμονή
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -28,6 +29,8 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      return self.clients.claim(); // Αναλαμβάνει αμέσως τον έλεγχο
     })
   );
 });

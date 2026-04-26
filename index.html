@@ -15,7 +15,31 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
+    <!-- License Lock Screen -->
+    <div id="license-screen" class="license-screen">
+        <div class="license-card">
+            <div class="license-logo">
+                <img src="VC_newLogo_colour_Transparent.png" alt="Logo" class="license-logo-img">
+                <h1>VathiCove Orders</h1>
+                <p class="license-subtitle">Εισάγετε το κλειδί αδείας για πρόσβαση</p>
+            </div>
+            <div class="license-input-wrapper">
+                <span class="material-symbols-rounded license-key-icon">key</span>
+                <input type="text" id="license-input" class="license-input" 
+                       placeholder="VC-XXXXX-XXX" 
+                       autocomplete="off"
+                       spellcheck="false">
+            </div>
+            <p id="license-error" class="license-error hidden"></p>
+            <button id="btn-activate" class="license-btn">
+                <span class="material-symbols-rounded">lock_open</span>
+                Ενεργοποίηση
+            </button>
+            <p class="license-footer">Επικοινωνήστε με τον διαχειριστή για κλειδί αδείας</p>
+        </div>
+    </div>
+
+    <div id="app" class="app-locked">
         <!-- Header -->
         <header>
             <div class="header-title">

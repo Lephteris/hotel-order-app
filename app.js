@@ -8,6 +8,128 @@ if (typeof products === 'undefined' || products.length === 0) {
     alert("Δεν βρέθηκαν προϊόντα. Παρακαλώ τρέξτε τη μακροεντολή στο Excel για να δημιουργηθεί το αρχείο data.js.");
 }
 
+// ===== LICENSE SYSTEM =====
+const LICENSE_SECRET_SALT = 4827;
+const LICENSE_XOR_KEY = 58291;
+const LICENSE_MOD_BASE = 46656; // 36^3
+
+function validateLicenseKey(key) {
+    if (!key || typeof key !== 'string') return null;
+    
+    key = key.trim().toUpperCase();
+    const parts = key.split('-');
+    
+    // Πρέπει να είναι: VC-XXXXX-XXX
+    if (parts.length !== 3 || parts[0] !== 'VC') return null;
+    
+    // Decode date
+    const dateNum = parseInt(parts[1], 36) ^ LICENSE_XOR_KEY;
+    if (isNaN(dateNum) || dateNum < 20200101 || dateNum > 20501231) return null;
+    
+    // Verify checksum
+    const expectedChecksum = ((dateNum * 7 + LICENSE_SECRET_SALT) % LICENSE_MOD_BASE).toString(36).toUpperCase().padStart(3, '0');
+    if (expectedChecksum !== parts[2].padStart(3, '0')) return null;
+    
+    // Extract date
+    const year = Math.floor(dateNum / 10000);
+    const month = Math.floor((dateNum % 10000) / 100);
+    const day = dateNum % 100;
+    
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    
+    return new Date(year, month - 1, day, 23, 59, 59);
+}
+
+function isLicenseValid() {
+    const storedKey = localStorage.getItem('vcLicenseKey');
+    if (!storedKey) return false;
+    
+    const expiryDate = validateLicenseKey(storedKey);
+    if (!expiryDate) return false;
+    
+    return new Date() <= expiryDate;
+}
+
+function getLicenseExpiry() {
+    const storedKey = localStorage.getItem('vcLicenseKey');
+    if (!storedKey) return null;
+    return validateLicenseKey(storedKey);
+}
+
+function checkLicense() {
+    const licenseScreen = document.getElementById('license-screen');
+    const app = document.getElementById('app');
+    const btnActivate = document.getElementById('btn-activate');
+    const licenseInput = document.getElementById('license-input');
+    const licenseError = document.getElementById('license-error');
+    
+    if (isLicenseValid()) {
+        // Άδεια ισχύει — δείξε την εφαρμογή
+        licenseScreen.classList.add('hidden');
+        app.classList.remove('app-locked');
+        init();
+        return;
+    }
+    
+    // Αν η άδεια έληξε, δείξε μήνυμα
+    const expiry = getLicenseExpiry();
+    if (expiry) {
+        licenseError.textContent = `Η άδεια έληξε στις ${expiry.toLocaleDateString('el-GR')}. Παρακαλώ εισάγετε νέο κλειδί.`;
+        licenseError.classList.remove('hidden');
+        localStorage.removeItem('vcLicenseKey');
+    }
+    
+    // Δείξε lock screen
+    licenseScreen.classList.remove('hidden');
+    app.classList.add('app-locked');
+    
+    // Event listener για ενεργοποίηση
+    btnActivate.addEventListener('click', () => {
+        const key = licenseInput.value.trim();
+        
+        if (!key) {
+            licenseError.textContent = 'Παρακαλώ εισάγετε ένα κλειδί αδείας.';
+            licenseError.classList.remove('hidden');
+            return;
+        }
+        
+        const expiryDate = validateLicenseKey(key);
+        
+        if (!expiryDate) {
+            licenseError.textContent = 'Μη έγκυρο κλειδί. Ελέγξτε και δοκιμάστε ξανά.';
+            licenseError.classList.remove('hidden');
+            licenseInput.classList.add('shake');
+            setTimeout(() => licenseInput.classList.remove('shake'), 500);
+            return;
+        }
+        
+        if (new Date() > expiryDate) {
+            licenseError.textContent = `Αυτό το κλειδί έχει λήξει (${expiryDate.toLocaleDateString('el-GR')}).`;
+            licenseError.classList.remove('hidden');
+            return;
+        }
+        
+        // Επιτυχία!
+        localStorage.setItem('vcLicenseKey', key.toUpperCase());
+        licenseError.classList.add('hidden');
+        
+        // Animation
+        btnActivate.innerHTML = '<span class="material-symbols-rounded">check_circle</span> Ενεργοποιήθηκε!';
+        btnActivate.style.background = '#10b981';
+        
+        setTimeout(() => {
+            licenseScreen.classList.add('hidden');
+            app.classList.remove('app-locked');
+            init();
+        }, 800);
+    });
+    
+    // Enter key
+    licenseInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnActivate.click();
+    });
+}
+
 // Εξαγωγή μοναδικών προμηθευτών
 const suppliers = [...new Set(products.map(p => p.supplier))];
 
@@ -511,5 +633,5 @@ function saveSettings() {
     }, 1200);
 }
 
-// Εκκίνηση της εφαρμογής
-init();
+// Εκκίνηση: Πρώτα έλεγχος αδείας, μετά η εφαρμογή
+checkLicense();

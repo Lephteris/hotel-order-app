@@ -30,6 +30,158 @@ body {
     padding-bottom: 80px;
 }
 
+/* License Lock Screen */
+.license-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.license-screen.hidden {
+    display: none;
+}
+
+.app-locked {
+    display: none !important;
+}
+
+.license-card {
+    background: rgba(30, 41, 59, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.license-logo { margin-bottom: 28px; }
+
+.license-logo-img {
+    height: 48px;
+    width: auto;
+    margin-bottom: 12px;
+    filter: brightness(1.2);
+}
+
+.license-logo h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.license-subtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 6px;
+}
+
+.license-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-top: 24px;
+    transition: border-color 0.3s;
+}
+
+.license-input-wrapper:focus-within {
+    border-color: #3b82f6;
+}
+
+.license-key-icon {
+    font-size: 22px;
+    color: #64748b;
+}
+
+.license-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Courier New', monospace;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    outline: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.license-input::placeholder {
+    color: #475569;
+    text-transform: none;
+    font-weight: 400;
+}
+
+.license-error {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.license-error.hidden { display: none; }
+
+.license-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+
+.license-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.license-btn:active {
+    transform: translateY(0);
+}
+
+.license-footer {
+    margin-top: 20px;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+/* Shake animation for invalid key */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+}
+.shake { animation: shake 0.4s ease-out; }
+
 /* Header */
 header {
     background-color: var(--surface);
