@@ -395,6 +395,19 @@ header h1 {
     color: var(--text-muted);
 }
 
+.product-supplier-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+}
+
 .quantity-controls {
     display: flex;
     align-items: center;

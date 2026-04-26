@@ -134,7 +134,7 @@ function checkLicense() {
 const suppliers = [...new Set(products.map(p => p.supplier))];
 
 // State (Κατάσταση Εφαρμογής)
-let activeSupplier = suppliers.length > 0 ? suppliers[0] : ""; // Προεπιλογή ο 1ος προμηθευτής
+let activeSupplier = ""; // Κενό = όλοι οι προμηθευτές
 let activeCategory = "Όλα";
 let searchQuery = "";
 let orderQuantities = {}; // Μορφή: { 1: 2, 5: 1 } (id: quantity)
@@ -249,6 +249,14 @@ function init() {
 // Render Suppliers
 function renderSuppliers() {
     supplierSelect.innerHTML = "";
+    
+    // Placeholder: όλοι οι προμηθευτές
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Επιλέξτε προμηθευτή";
+    if (activeSupplier === "") defaultOption.selected = true;
+    supplierSelect.appendChild(defaultOption);
+    
     suppliers.forEach(sup => {
         const option = document.createElement("option");
         option.value = sup;
@@ -262,9 +270,14 @@ function renderSuppliers() {
 function renderCategories() {
     categorySlicer.innerHTML = "";
     
-    // Βρίσκουμε τις κατηγορίες μόνο για τον ενεργό προμηθευτή
-    const supplierProducts = products.filter(p => p.supplier === activeSupplier);
-    const categories = ["Όλα", ...new Set(supplierProducts.map(p => p.category))];
+    // Βρίσκουμε τις κατηγορίες ανάλογα τον επιλεγμένο προμηθευτή
+    const sourceProducts = activeSupplier 
+        ? products.filter(p => p.supplier === activeSupplier)
+        : products;
+    
+    // Φιλτράρουμε κενές κατηγορίες
+    const allCategories = [...new Set(sourceProducts.map(p => p.category))].filter(c => c !== "");
+    const categories = ["Όλα", ...allCategories];
     
     categories.forEach(cat => {
         const btn = document.createElement("button");
@@ -283,8 +296,10 @@ function renderCategories() {
 function renderProducts() {
     productList.innerHTML = "";
     
-    // Φιλτράρισμα ανά Προμηθευτή
-    let filteredProducts = products.filter(p => p.supplier === activeSupplier);
+    // Φιλτράρισμα ανά Προμηθευτή (κενό = όλοι)
+    let filteredProducts = activeSupplier 
+        ? products.filter(p => p.supplier === activeSupplier)
+        : [...products];
     
     // Φιλτράρισμα ανά Κατηγορία (αν δεν είναι "Όλα")
     if (activeCategory !== "Όλα") {
@@ -296,6 +311,9 @@ function renderProducts() {
         const query = searchQuery.toLowerCase().trim();
         filteredProducts = filteredProducts.filter(p => p.name.toLowerCase().includes(query));
     }
+    
+    // Εμφάνιση προμηθευτή όταν βλέπουμε όλους
+    const showSupplierTag = !activeSupplier;
         
     filteredProducts.forEach(product => {
         const qty = orderQuantities[product.id] || 0;
@@ -309,7 +327,7 @@ function renderProducts() {
             <div class="product-card-top">
                 <div class="product-info">
                     <span class="product-name">${product.name}</span>
-                    <span class="product-category">${product.category}</span>
+                    <span class="product-category">${product.category}${showSupplierTag ? ` <span class="product-supplier-tag">${product.supplier}</span>` : ''}</span>
                 </div>
                 <div class="quantity-controls">
                     <button class="qty-btn" onclick="updateQuantity(${product.id}, -1)">
@@ -370,23 +388,35 @@ window.updateNote = function(productId, text) {
 
 // Update Cart Floating Button
 function updateCartButton() {
-    // Στο καλάθι μετράμε ΜΟΝΟ τα είδη του τρέχοντος προμηθευτή
-    const currentSupplierItemsCount = Object.keys(orderQuantities).filter(id => {
-        const p = products.find(prod => prod.id == id);
-        return p && p.supplier === activeSupplier;
-    }).length;
+    const totalItems = Object.keys(orderQuantities).length;
     
-    cartCount.textContent = currentSupplierItemsCount;
-    
-    if (currentSupplierItemsCount > 0) {
-        btnCart.classList.remove("hidden");
+    if (activeSupplier) {
+        // Στο καλάθι μετράμε ΜΟΝΟ τα είδη του τρέχοντος προμηθευτή
+        const currentSupplierItemsCount = Object.keys(orderQuantities).filter(id => {
+            const p = products.find(prod => prod.id == id);
+            return p && p.supplier === activeSupplier;
+        }).length;
+        
+        cartCount.textContent = currentSupplierItemsCount;
+        
+        if (currentSupplierItemsCount > 0) {
+            btnCart.classList.remove("hidden");
+        } else {
+            btnCart.classList.add("hidden");
+            closeCart();
+        }
     } else {
-        btnCart.classList.add("hidden");
-        closeCart(); // Κλείσε το καλάθι αν μηδενιστούν τα πάντα για τον προμηθευτή
+        // Όταν βλέπουμε όλους τους προμηθευτές, δείχνουμε το σύνολο
+        cartCount.textContent = totalItems;
+        if (totalItems > 0) {
+            btnCart.classList.remove("hidden");
+        } else {
+            btnCart.classList.add("hidden");
+            closeCart();
+        }
     }
     
     // Ενημέρωση κουμπιού Γενικής Σύνοψης
-    const totalItems = Object.keys(orderQuantities).length;
     if (totalItems > 0) {
         btnFullSummary.classList.remove("hidden");
     } else {
