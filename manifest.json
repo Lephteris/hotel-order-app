@@ -1,7 +1,7 @@
 {
-  "name": "Παραγγελίες Ξενοδοχείου",
-  "short_name": "Παραγγελίες",
-  "description": "Εφαρμογή διαχείρισης παραγγελιών",
+  "name": "VathiCove Orders",
+  "short_name": "VathiCove",
+  "description": "VathiCove - Εφαρμογή διαχείρισης παραγγελιών",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

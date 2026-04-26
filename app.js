@@ -33,6 +33,34 @@ const btnSendEmail = document.getElementById("btn-send-email");
 const btnReset = document.getElementById("btn-reset");
 const btnPrintOrder = document.getElementById("btn-print-order");
 
+// Νέα DOM Elements
+const btnFullSummary = document.getElementById("btn-full-summary");
+const fullSummaryModal = document.getElementById("full-summary-modal");
+const btnCloseFullSummary = document.getElementById("btn-close-full-summary");
+const btnCloseFullSummaryBottom = document.getElementById("btn-close-full-summary-bottom");
+const fullSummaryItems = document.getElementById("full-summary-items");
+const btnPrintFullSummary = document.getElementById("btn-print-full-summary");
+const btnSettings = document.getElementById("btn-settings");
+const settingsModal = document.getElementById("settings-modal");
+const btnCloseSettings = document.getElementById("btn-close-settings");
+const btnSaveSettings = document.getElementById("btn-save-settings");
+const supplierEmailList = document.getElementById("supplier-email-list");
+
+// ===== SETTINGS: Supplier Emails (localStorage) =====
+function getSupplierEmails() {
+    const stored = localStorage.getItem('supplierEmails');
+    return stored ? JSON.parse(stored) : {};
+}
+
+function saveSupplierEmails(emailMap) {
+    localStorage.setItem('supplierEmails', JSON.stringify(emailMap));
+}
+
+function getEmailForSupplier(supplierName) {
+    const emails = getSupplierEmails();
+    return emails[supplierName] || "";
+}
+
 // Αρχικοποίηση
 function init() {
     if (suppliers.length === 0) return; // Αν δεν υπάρχουν δεδομένα, σταματάμε
@@ -52,12 +80,37 @@ function init() {
     renderProducts();
     updateCartButton();
     
-    // Event Listeners
+    // Event Listeners — Υπάρχοντα
     btnCart.addEventListener("click", openCart);
     btnCloseModal.addEventListener("click", closeCart);
     btnSendEmail.addEventListener("click", sendEmail);
     btnReset.addEventListener("click", resetOrder);
-    btnPrintOrder.addEventListener("click", () => window.print());
+    btnPrintOrder.addEventListener("click", () => {
+        cartModal.classList.add('printing');
+        window.print();
+        cartModal.classList.remove('printing');
+    });
+    
+    // Event Listeners — Γενική Σύνοψη
+    btnFullSummary.addEventListener("click", openFullSummary);
+    btnCloseFullSummary.addEventListener("click", closeFullSummary);
+    btnCloseFullSummaryBottom.addEventListener("click", closeFullSummary);
+    btnPrintFullSummary.addEventListener("click", () => {
+        fullSummaryModal.classList.add('printing');
+        window.print();
+        fullSummaryModal.classList.remove('printing');
+    });
+    fullSummaryModal.addEventListener("click", (e) => {
+        if (e.target === fullSummaryModal) closeFullSummary();
+    });
+    
+    // Event Listeners — Ρυθμίσεις
+    btnSettings.addEventListener("click", openSettings);
+    btnCloseSettings.addEventListener("click", closeSettings);
+    btnSaveSettings.addEventListener("click", saveSettings);
+    settingsModal.addEventListener("click", (e) => {
+        if (e.target === settingsModal) closeSettings();
+    });
     
     // Αναζήτηση
     searchInput.addEventListener("input", (e) => {
@@ -209,6 +262,14 @@ function updateCartButton() {
         btnCart.classList.add("hidden");
         closeCart(); // Κλείσε το καλάθι αν μηδενιστούν τα πάντα για τον προμηθευτή
     }
+    
+    // Ενημέρωση κουμπιού Γενικής Σύνοψης
+    const totalItems = Object.keys(orderQuantities).length;
+    if (totalItems > 0) {
+        btnFullSummary.classList.remove("hidden");
+    } else {
+        btnFullSummary.classList.add("hidden");
+    }
 }
 
 // Open/Close Cart
@@ -264,14 +325,22 @@ function resetOrder() {
         renderProducts();
         updateCartButton();
         closeCart();
+        closeFullSummary();
     }
 }
 
 // Send Email
 function sendEmail() {
-    // Βρίσκουμε το email του τρέχοντος προμηθευτή από το πρώτο του προϊόν
-    const supplierProduct = products.find(p => p.supplier === activeSupplier);
-    const emailTo = supplierProduct ? supplierProduct.supplierEmail : "";
+    // Βρίσκουμε το email του τρέχοντος προμηθευτή από τις ρυθμίσεις (localStorage)
+    const emailTo = getEmailForSupplier(activeSupplier);
+    
+    if (!emailTo) {
+        if (confirm(`Δεν έχει οριστεί email για τον προμηθευτή "${activeSupplier}".\n\nΘέλετε να ανοίξετε τις Ρυθμίσεις για να το προσθέσετε;`)) {
+            closeCart();
+            openSettings();
+        }
+        return;
+    }
     
     const subject = encodeURIComponent(`Νέα Παραγγελία: ${activeSupplier}`);
     
@@ -300,6 +369,146 @@ function sendEmail() {
     // Άνοιγμα του προεπιλεγμένου προγράμματος mail
     window.location.href = `mailto:${emailTo}?subject=${subject}&body=${body}`;
     closeCart();
+}
+
+// ===== ΓΕΝΙΚΗ ΣΥΝΟΨΗ ΠΑΡΑΓΓΕΛΙΑΣ (Όλοι οι Προμηθευτές) =====
+function openFullSummary() {
+    fullSummaryItems.innerHTML = "";
+    
+    // Ομαδοποίηση ειδών ανά προμηθευτή
+    const ordersBySupplier = {};
+    Object.keys(orderQuantities).forEach(id => {
+        const product = products.find(p => p.id == id);
+        if (!product) return;
+        if (!ordersBySupplier[product.supplier]) {
+            ordersBySupplier[product.supplier] = [];
+        }
+        ordersBySupplier[product.supplier].push({
+            product,
+            qty: orderQuantities[id],
+            note: orderNotes[id] || ""
+        });
+    });
+    
+    if (Object.keys(ordersBySupplier).length === 0) {
+        fullSummaryItems.innerHTML = '<p class="empty-summary">Δεν υπάρχουν επιλεγμένα είδη.</p>';
+        fullSummaryModal.classList.remove("hidden");
+        return;
+    }
+    
+    // Ημερομηνία
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+    
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'summary-date';
+    dateDiv.innerHTML = `<span class="material-symbols-rounded">calendar_today</span> ${dateStr} — ${timeStr}`;
+    fullSummaryItems.appendChild(dateDiv);
+    
+    let totalItemCount = 0;
+    
+    // Render ανά προμηθευτή
+    Object.keys(ordersBySupplier).forEach(supplierName => {
+        const items = ordersBySupplier[supplierName];
+        
+        const section = document.createElement('div');
+        section.className = 'summary-supplier-section';
+        
+        let sectionHtml = `
+            <div class="summary-supplier-header">
+                <span class="material-symbols-rounded">local_shipping</span>
+                <span class="summary-supplier-name">${supplierName}</span>
+                <span class="summary-supplier-count">${items.length} είδη</span>
+            </div>
+            <div class="summary-items-list">
+        `;
+        
+        items.forEach(item => {
+            totalItemCount++;
+            sectionHtml += `
+                <div class="summary-item">
+                    <span class="summary-item-name">${item.product.name}</span>
+                    <span class="summary-item-qty">${item.qty}</span>
+                </div>
+            `;
+            if (item.note) {
+                sectionHtml += `<span class="summary-item-note">📝 ${item.note}</span>`;
+            }
+        });
+        
+        sectionHtml += '</div>';
+        section.innerHTML = sectionHtml;
+        fullSummaryItems.appendChild(section);
+    });
+    
+    // Συνολικό footer
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'summary-total';
+    totalDiv.innerHTML = `
+        <span>Σύνολο:</span>
+        <strong>${totalItemCount} είδη</strong> από <strong>${Object.keys(ordersBySupplier).length} προμηθευτές</strong>
+    `;
+    fullSummaryItems.appendChild(totalDiv);
+    
+    fullSummaryModal.classList.remove("hidden");
+}
+
+function closeFullSummary() {
+    fullSummaryModal.classList.add("hidden");
+}
+
+// ===== ΡΥΘΜΙΣΕΙΣ (Settings) =====
+function openSettings() {
+    supplierEmailList.innerHTML = "";
+    const savedEmails = getSupplierEmails();
+    
+    suppliers.forEach(sup => {
+        const currentEmail = savedEmails[sup] || "";
+        const row = document.createElement('div');
+        row.className = 'settings-email-row';
+        row.innerHTML = `
+            <label class="settings-email-label">${sup}</label>
+            <div class="settings-email-input-wrapper">
+                <span class="material-symbols-rounded settings-email-icon">mail</span>
+                <input type="email" class="settings-email-input" 
+                       data-supplier="${sup}" 
+                       value="${currentEmail}" 
+                       placeholder="email@example.com">
+            </div>
+        `;
+        supplierEmailList.appendChild(row);
+    });
+    
+    settingsModal.classList.remove("hidden");
+}
+
+function closeSettings() {
+    settingsModal.classList.add("hidden");
+}
+
+function saveSettings() {
+    const emailMap = {};
+    const inputs = supplierEmailList.querySelectorAll('.settings-email-input');
+    
+    inputs.forEach(input => {
+        const supplier = input.getAttribute('data-supplier');
+        const email = input.value.trim();
+        if (email) {
+            emailMap[supplier] = email;
+        }
+    });
+    
+    saveSupplierEmails(emailMap);
+    
+    // Visual feedback
+    btnSaveSettings.innerHTML = '<span class="material-symbols-rounded">check</span> Αποθηκεύτηκε!';
+    btnSaveSettings.style.background = '#10b981';
+    setTimeout(() => {
+        btnSaveSettings.innerHTML = '<span class="material-symbols-rounded">save</span> Αποθήκευση';
+        btnSaveSettings.style.background = '';
+        closeSettings();
+    }, 1200);
 }
 
 // Εκκίνηση της εφαρμογής

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Παραγγελίες Ξενοδοχείου</title>
+    <title>VathiCove Orders</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,9 +20,15 @@
         <header>
             <div class="header-title">
                 <img src="VC_newLogo_colour_Transparent.png" alt="Logo" class="header-logo">
-                <h1>Παραγγελίες</h1>
+                <h1>VathiCove Orders</h1>
             </div>
             <div class="header-actions">
+                <button id="btn-full-summary" class="icon-btn hidden" title="Γενική Σύνοψη">
+                    <span class="material-symbols-rounded">summarize</span>
+                </button>
+                <button id="btn-settings" class="icon-btn" title="Ρυθμίσεις">
+                    <span class="material-symbols-rounded">settings</span>
+                </button>
                 <button id="btn-reset" class="icon-btn" title="Καθαρισμός">
                     <span class="material-symbols-rounded">delete</span>
                 </button>
@@ -82,6 +88,56 @@
                     <button id="btn-send-email" class="primary-btn">
                         <span class="material-symbols-rounded">send</span>
                         Αποστολή με Email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Modal for Full Order Summary (All Suppliers) -->
+        <div id="full-summary-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Γενική Σύνοψη Παραγγελίας</h2>
+                    <button id="btn-close-full-summary" class="icon-btn">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="full-summary-items">
+                    <!-- Γενική σύνοψη εδώ -->
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-print-full-summary" class="secondary-btn" title="Εκτύπωση / Αποθήκευση PDF">
+                        <span class="material-symbols-rounded">print</span>
+                    </button>
+                    <button id="btn-close-full-summary-bottom" class="primary-btn">
+                        <span class="material-symbols-rounded">check</span>
+                        Κλείσιμο
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Settings -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Ρυθμίσεις</h2>
+                    <button id="btn-close-settings" class="icon-btn">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="settings-body">
+                    <p class="settings-subtitle">Email Προμηθευτών</p>
+                    <p class="settings-description">Εισάγετε τα email των προμηθευτών για αυτόματη αποστολή παραγγελιών.</p>
+                    <div id="supplier-email-list">
+                        <!-- Θα γεμίσει από JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-settings" class="primary-btn">
+                        <span class="material-symbols-rounded">save</span>
+                        Αποθήκευση
                     </button>
                 </div>
             </div>
