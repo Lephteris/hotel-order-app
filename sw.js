@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vathicove-orders-v8';
+const CACHE_NAME = 'vathicove-orders-v9';
 const urlsToCache = [
   './',
   './index.html',

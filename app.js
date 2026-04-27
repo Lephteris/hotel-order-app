@@ -561,7 +561,7 @@ function openPrintWindow(title, bodyHtml) {
 </head>
 <body>
     <div class="print-header">
-        <h1>VathiCove Orders</h1>
+        <h1>Vathi Cove Order</h1>
         <div class="print-date">${dateStr} — ${timeStr}</div>
     </div>
     ${bodyHtml}
