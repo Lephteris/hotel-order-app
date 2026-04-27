@@ -134,9 +134,9 @@
                     <button id="btn-print-full-summary" class="secondary-btn" title="Εκτύπωση / Αποθήκευση PDF">
                         <span class="material-symbols-rounded">print</span>
                     </button>
-                    <button id="btn-close-full-summary-bottom" class="primary-btn">
-                        <span class="material-symbols-rounded">check</span>
-                        Κλείσιμο
+                    <button id="btn-send-all-emails" class="primary-btn">
+                        <span class="material-symbols-rounded">forward_to_inbox</span>
+                        Αποστολή σε Όλους
                     </button>
                 </div>
             </div>
@@ -156,6 +156,21 @@
                     <p class="settings-description">Εισάγετε τα email των προμηθευτών για αυτόματη αποστολή παραγγελιών.</p>
                     <div id="supplier-email-list">
                         <!-- Θα γεμίσει από JS -->
+                    </div>
+                    <div class="settings-backup-section">
+                        <p class="settings-subtitle">Αντίγραφο Ασφαλείας</p>
+                        <p class="settings-description">Εξαγωγή / Εισαγωγή emails για να μην χάνονται κατά τις αναβαθμίσεις.</p>
+                        <div class="settings-backup-buttons">
+                            <button id="btn-export-emails" class="backup-btn">
+                                <span class="material-symbols-rounded">download</span>
+                                Εξαγωγή
+                            </button>
+                            <button id="btn-import-emails" class="backup-btn">
+                                <span class="material-symbols-rounded">upload</span>
+                                Εισαγωγή
+                            </button>
+                            <input type="file" id="import-file-input" accept=".json" style="display:none">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

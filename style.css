@@ -833,46 +833,110 @@ header h1 {
     background: var(--primary-hover);
 }
 
+/* ===== Settings Backup Styles ===== */
+.settings-backup-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.settings-backup-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.backup-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.backup-btn:hover {
+    background: var(--border);
+}
+
+.backup-btn:active {
+    transform: scale(0.97);
+}
+
+/* Orphaned email styles */
+.settings-orphan-title {
+    margin-top: 20px;
+    padding: 10px 14px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #92400e;
+}
+
+.settings-orphan-row {
+    opacity: 0.7;
+}
+
 /* Print Styles */
 @media print {
-    body * {
-        visibility: hidden;
+    /* Κρύψε τα πάντα εκτός modal */
+    body > *:not(.modal) {
+        display: none !important;
     }
     
-    /* Per-supplier cart modal printing */
-    #cart-modal.printing,
-    #cart-modal.printing * {
-        visibility: visible;
+    #license-screen,
+    header,
+    .supplier-container,
+    .search-container,
+    .slicer-container,
+    #product-list,
+    .floating-cart,
+    #app > header,
+    #app > .supplier-container,
+    #app > .search-container,
+    #app > .slicer-container,
+    #app > main,
+    #app > .floating-cart {
+        display: none !important;
     }
-    #cart-modal.printing {
+    
+    /* Κρύψε τα modal που ΔΕΝ εκτυπώνονται */
+    .modal:not(.printing) {
+        display: none !important;
+    }
+    
+    /* Δείξε μόνο το modal που εκτυπώνεται */
+    .modal.printing {
+        display: block !important;
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
         height: auto;
         background: none;
+        backdrop-filter: none;
     }
     
-    /* Full summary modal printing */
-    #full-summary-modal.printing,
-    #full-summary-modal.printing * {
-        visibility: visible;
-    }
-    #full-summary-modal.printing {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: auto;
-        background: none;
-    }
-    
-    .modal-content {
+    .modal.printing .modal-content {
         box-shadow: none;
         border: none;
+        border-radius: 0;
         width: 100%;
+        max-height: none;
         height: auto;
     }
+    
     .modal-footer, .modal-header .icon-btn {
         display: none !important;
     }

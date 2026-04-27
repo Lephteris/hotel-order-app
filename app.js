@@ -159,14 +159,17 @@ const btnPrintOrder = document.getElementById("btn-print-order");
 const btnFullSummary = document.getElementById("btn-full-summary");
 const fullSummaryModal = document.getElementById("full-summary-modal");
 const btnCloseFullSummary = document.getElementById("btn-close-full-summary");
-const btnCloseFullSummaryBottom = document.getElementById("btn-close-full-summary-bottom");
 const fullSummaryItems = document.getElementById("full-summary-items");
 const btnPrintFullSummary = document.getElementById("btn-print-full-summary");
+const btnSendAllEmails = document.getElementById("btn-send-all-emails");
 const btnSettings = document.getElementById("btn-settings");
 const settingsModal = document.getElementById("settings-modal");
 const btnCloseSettings = document.getElementById("btn-close-settings");
 const btnSaveSettings = document.getElementById("btn-save-settings");
 const supplierEmailList = document.getElementById("supplier-email-list");
+const btnExportEmails = document.getElementById("btn-export-emails");
+const btnImportEmails = document.getElementById("btn-import-emails");
+const importFileInput = document.getElementById("import-file-input");
 
 // ===== SETTINGS: Supplier Emails (localStorage) =====
 function getSupplierEmails() {
@@ -216,12 +219,12 @@ function init() {
     // Event Listeners — Γενική Σύνοψη
     btnFullSummary.addEventListener("click", openFullSummary);
     btnCloseFullSummary.addEventListener("click", closeFullSummary);
-    btnCloseFullSummaryBottom.addEventListener("click", closeFullSummary);
     btnPrintFullSummary.addEventListener("click", () => {
         fullSummaryModal.classList.add('printing');
         window.print();
         fullSummaryModal.classList.remove('printing');
     });
+    btnSendAllEmails.addEventListener("click", sendEmailsToAllSuppliers);
     fullSummaryModal.addEventListener("click", (e) => {
         if (e.target === fullSummaryModal) closeFullSummary();
     });
@@ -230,6 +233,9 @@ function init() {
     btnSettings.addEventListener("click", openSettings);
     btnCloseSettings.addEventListener("click", closeSettings);
     btnSaveSettings.addEventListener("click", saveSettings);
+    btnExportEmails.addEventListener("click", exportEmails);
+    btnImportEmails.addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", importEmails);
     settingsModal.addEventListener("click", (e) => {
         if (e.target === settingsModal) closeSettings();
     });
@@ -615,6 +621,7 @@ function openSettings() {
     supplierEmailList.innerHTML = "";
     const savedEmails = getSupplierEmails();
     
+    // Εμφάνιση τρεχόντων προμηθευτών
     suppliers.forEach(sup => {
         const currentEmail = savedEmails[sup] || "";
         const row = document.createElement('div');
@@ -631,6 +638,31 @@ function openSettings() {
         `;
         supplierEmailList.appendChild(row);
     });
+    
+    // Εμφάνιση «ορφανών» emails (αποθηκευμένα emails για προμηθευτές που δεν υπάρχουν πλέον στο data.js)
+    const orphanedSuppliers = Object.keys(savedEmails).filter(s => !suppliers.includes(s));
+    if (orphanedSuppliers.length > 0) {
+        const orphanTitle = document.createElement('div');
+        orphanTitle.className = 'settings-orphan-title';
+        orphanTitle.innerHTML = `<span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:4px">warning</span> Παλαιότερα emails (δεν αντιστοιχούν σε τρέχοντα προμηθευτή)`;
+        supplierEmailList.appendChild(orphanTitle);
+        
+        orphanedSuppliers.forEach(sup => {
+            const row = document.createElement('div');
+            row.className = 'settings-email-row settings-orphan-row';
+            row.innerHTML = `
+                <label class="settings-email-label">${sup}</label>
+                <div class="settings-email-input-wrapper">
+                    <span class="material-symbols-rounded settings-email-icon">mail</span>
+                    <input type="email" class="settings-email-input" 
+                           data-supplier="${sup}" 
+                           value="${savedEmails[sup]}" 
+                           placeholder="email@example.com">
+                </div>
+            `;
+            supplierEmailList.appendChild(row);
+        });
+    }
     
     settingsModal.classList.remove("hidden");
 }
@@ -661,6 +693,126 @@ function saveSettings() {
         btnSaveSettings.style.background = '';
         closeSettings();
     }, 1200);
+}
+
+// ===== ΕΞΑΓΩΓΗ / ΕΙΣΑΓΩΓΗ EMAILS =====
+function exportEmails() {
+    const emails = getSupplierEmails();
+    if (Object.keys(emails).length === 0) {
+        alert('Δεν υπάρχουν αποθηκευμένα emails για εξαγωγή.');
+        return;
+    }
+    const blob = new Blob([JSON.stringify(emails, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vathicove_supplier_emails.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Visual feedback στο κουμπί export
+    btnExportEmails.innerHTML = '<span class="material-symbols-rounded">check</span> Έγινε!';
+    setTimeout(() => {
+        btnExportEmails.innerHTML = '<span class="material-symbols-rounded">download</span> Εξαγωγή';
+    }, 1500);
+}
+
+function importEmails(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (typeof imported !== 'object' || Array.isArray(imported)) {
+                throw new Error('Μη έγκυρη μορφή');
+            }
+            
+            // Merge: τα νέα emails αντικαθιστούν τα παλιά, αλλά κρατάμε όσα δεν υπάρχουν στο import
+            const current = getSupplierEmails();
+            const merged = { ...current, ...imported };
+            saveSupplierEmails(merged);
+            
+            // Ανανέωση της φόρμας
+            openSettings();
+            
+            alert(`Επιτυχής εισαγωγή ${Object.keys(imported).length} emails!`);
+        } catch (err) {
+            alert('Σφάλμα κατά την εισαγωγή. Βεβαιωθείτε ότι το αρχείο είναι σωστό JSON.');
+        }
+    };
+    reader.readAsText(file);
+    // Reset input ώστε να μπορεί να ξαναεπιλεγεί το ίδιο αρχείο
+    event.target.value = '';
+}
+
+// ===== ΑΠΟΣΤΟΛΗ EMAIL ΣΕ ΟΛΟΥΣ ΤΟΥΣ ΠΡΟΜΗΘΕΥΤΕΣ =====
+function sendEmailsToAllSuppliers() {
+    // Ομαδοποίηση ειδών ανά προμηθευτή
+    const ordersBySupplier = {};
+    Object.keys(orderQuantities).forEach(id => {
+        const product = products.find(p => p.id == id);
+        if (!product) return;
+        if (!ordersBySupplier[product.supplier]) {
+            ordersBySupplier[product.supplier] = [];
+        }
+        ordersBySupplier[product.supplier].push({
+            product,
+            qty: orderQuantities[id],
+            note: orderNotes[id] || ""
+        });
+    });
+    
+    const supplierNames = Object.keys(ordersBySupplier);
+    if (supplierNames.length === 0) {
+        alert('Δεν υπάρχουν επιλεγμένα είδη.');
+        return;
+    }
+    
+    // Έλεγχος emails
+    const savedEmails = getSupplierEmails();
+    const missingEmails = supplierNames.filter(s => !savedEmails[s]);
+    
+    if (missingEmails.length > 0) {
+        const msg = `Λείπουν emails για τους εξής προμηθευτές:\n\n${missingEmails.join('\n')}\n\nΘέλετε να ανοίξετε τις Ρυθμίσεις;`;
+        if (confirm(msg)) {
+            closeFullSummary();
+            openSettings();
+        }
+        return;
+    }
+    
+    // Επιβεβαίωση
+    const confirmMsg = `Θα ανοιχθούν ${supplierNames.length} ξεχωριστά email για τους εξής προμηθευτές:\n\n${supplierNames.map(s => `• ${s} (${ordersBySupplier[s].length} είδη)`).join('\n')}\n\nΣυνέχεια;`;
+    if (!confirm(confirmMsg)) return;
+    
+    // Διαδοχικό άνοιγμα mailto links
+    supplierNames.forEach((supplierName, index) => {
+        const emailTo = savedEmails[supplierName];
+        const items = ordersBySupplier[supplierName];
+        const subject = encodeURIComponent(`Νέα Παραγγελία: ${supplierName}`);
+        
+        let bodyText = `Γεια σας,\n\nΠαρακαλώ όπως προχωρήσετε στην παρακάτω παραγγελία:\n\n`;
+        items.forEach(item => {
+            bodyText += `- ${item.product.name} (Ποσότητα: ${item.qty})`;
+            if (item.note) {
+                bodyText += ` [Σημείωση: ${item.note}]`;
+            }
+            bodyText += `\n`;
+        });
+        bodyText += `\nΕυχαριστώ πολύ.`;
+        const body = encodeURIComponent(bodyText);
+        
+        // Χρήση timeout για να μη μπλοκάρει ο browser
+        setTimeout(() => {
+            window.open(`mailto:${emailTo}?subject=${subject}&body=${body}`, '_blank');
+        }, index * 800);
+    });
+    
+    closeFullSummary();
 }
 
 // Εκκίνηση: Πρώτα έλεγχος αδείας, μετά η εφαρμογή
