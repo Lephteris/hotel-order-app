@@ -210,20 +210,12 @@ function init() {
     btnCloseModal.addEventListener("click", closeCart);
     btnSendEmail.addEventListener("click", sendEmail);
     btnReset.addEventListener("click", resetOrder);
-    btnPrintOrder.addEventListener("click", () => {
-        cartModal.classList.add('printing');
-        window.print();
-        cartModal.classList.remove('printing');
-    });
+    btnPrintOrder.addEventListener("click", printOrderPage);
     
     // Event Listeners — Γενική Σύνοψη
     btnFullSummary.addEventListener("click", openFullSummary);
     btnCloseFullSummary.addEventListener("click", closeFullSummary);
-    btnPrintFullSummary.addEventListener("click", () => {
-        fullSummaryModal.classList.add('printing');
-        window.print();
-        fullSummaryModal.classList.remove('printing');
-    });
+    btnPrintFullSummary.addEventListener("click", printFullSummaryPage);
     btnSendAllEmails.addEventListener("click", sendEmailsToAllSuppliers);
     fullSummaryModal.addEventListener("click", (e) => {
         if (e.target === fullSummaryModal) closeFullSummary();
@@ -468,6 +460,189 @@ function openCart() {
 
 function closeCart() {
     cartModal.classList.add("hidden");
+}
+
+// ===== ΕΚΤΥΠΩΣΗ (Mobile-friendly) =====
+function getPrintStyles() {
+    return `
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 24px;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+        .print-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #2563eb;
+        }
+        .print-header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .print-header .print-date {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .print-supplier {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 16px 0 8px;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+        }
+        .print-supplier-count {
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-left: 8px;
+        }
+        .print-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .print-item:last-child { border-bottom: none; }
+        .print-item-name { font-size: 0.9rem; }
+        .print-item-qty {
+            font-weight: 700;
+            color: #2563eb;
+            min-width: 40px;
+            text-align: right;
+        }
+        .print-item-note {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-style: italic;
+            padding: 2px 12px 6px;
+        }
+        .print-total {
+            margin-top: 20px;
+            padding: 12px;
+            background: #1f2937;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+        @media print {
+            body { padding: 0; }
+        }
+    `;
+}
+
+function openPrintWindow(title, bodyHtml) {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('Ο browser μπλόκαρε το παράθυρο εκτύπωσης. Παρακαλώ επιτρέψτε τα pop-ups για αυτή τη σελίδα.');
+        return;
+    }
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+    
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>${getPrintStyles()}</style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>VathiCove Orders</h1>
+        <div class="print-date">${dateStr} — ${timeStr}</div>
+    </div>
+    ${bodyHtml}
+    <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`);
+    printWindow.document.close();
+}
+
+function printOrderPage() {
+    // Εκτύπωση σύνοψης ενός προμηθευτή
+    const supplierOrders = Object.keys(orderQuantities).filter(id => {
+        const p = products.find(prod => prod.id == id);
+        return p && p.supplier === activeSupplier;
+    });
+    
+    if (supplierOrders.length === 0) return;
+    
+    let html = `<div class="print-supplier">${activeSupplier}<span class="print-supplier-count">${supplierOrders.length} είδη</span></div>`;
+    
+    supplierOrders.forEach(id => {
+        const product = products.find(p => p.id == id);
+        const qty = orderQuantities[id];
+        const note = orderNotes[id];
+        
+        html += `<div class="print-item">
+            <span class="print-item-name">${product.name}</span>
+            <span class="print-item-qty">${qty}</span>
+        </div>`;
+        if (note) {
+            html += `<div class="print-item-note">📝 ${note}</div>`;
+        }
+    });
+    
+    openPrintWindow(`Παραγγελία: ${activeSupplier}`, html);
+}
+
+function printFullSummaryPage() {
+    // Εκτύπωση γενικής σύνοψης (όλοι οι προμηθευτές)
+    const ordersBySupplier = {};
+    Object.keys(orderQuantities).forEach(id => {
+        const product = products.find(p => p.id == id);
+        if (!product) return;
+        if (!ordersBySupplier[product.supplier]) {
+            ordersBySupplier[product.supplier] = [];
+        }
+        ordersBySupplier[product.supplier].push({
+            product,
+            qty: orderQuantities[id],
+            note: orderNotes[id] || ""
+        });
+    });
+    
+    if (Object.keys(ordersBySupplier).length === 0) return;
+    
+    let html = '';
+    let totalItemCount = 0;
+    
+    Object.keys(ordersBySupplier).forEach(supplierName => {
+        const items = ordersBySupplier[supplierName];
+        totalItemCount += items.length;
+        
+        html += `<div class="print-supplier">${supplierName}<span class="print-supplier-count">${items.length} είδη</span></div>`;
+        
+        items.forEach(item => {
+            html += `<div class="print-item">
+                <span class="print-item-name">${item.product.name}</span>
+                <span class="print-item-qty">${item.qty}</span>
+            </div>`;
+            if (item.note) {
+                html += `<div class="print-item-note">📝 ${item.note}</div>`;
+            }
+        });
+    });
+    
+    html += `<div class="print-total">
+        <span>Σύνολο:</span>
+        <strong>${totalItemCount} είδη από ${Object.keys(ordersBySupplier).length} προμηθευτές</strong>
+    </div>`;
+    
+    openPrintWindow('Γενική Σύνοψη Παραγγελίας', html);
 }
 
 // Reset Order (ΓΙΑ ΟΛΟΥΣ ΤΟΥΣ ΠΡΟΜΗΘΕΥΤΕΣ)
